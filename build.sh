@@ -40,9 +40,13 @@ do
 done
 
 if [[ ( $sum -ne 1 ) || ( ${REBUILD} == "true" ) ]];then
-  sed "s/TERRAFORM_VERSION/${latest_terraform}/" Dockerfile.template > Dockerfile
-  docker build --build-arg TERRAGRUNT_VERSION=${latest_terragrunt} --build-arg TERRAFORM_VERSION=${latest_terraform} --no-cache -t ${image}:${latest_alpine_terragrunt} .
-  docker tag ${image}:${latest_alpine_terragrunt} ${image}:latest
+  #docker build --build-arg TERRAGRUNT_VERSION=${latest_terragrunt} --build-arg TERRAFORM_VERSION=${latest_terraform} --no-cache -t ${image}:${latest_alpine_terragrunt} .
+  #docker tag ${image}:${latest_alpine_terragrunt} ${image}:latest
+  
+  for platform in gke; do
+    docker build -f Dockerfile-${platform} --build-arg TERRAGRUNT_VERSION=${latest_terragrunt} --build-arg TERRAFORM_VERSION=${latest_terraform} --no-cache -t ${image}-${platform}:${latest_alpine_terragrunt} .
+    docker tag ${image}-${platform}:${latest_alpine_terragrunt} ${image}-${platform}:latest
+  done
 
   if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == false ]]; then
     docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
